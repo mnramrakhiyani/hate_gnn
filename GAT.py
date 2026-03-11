@@ -33,16 +33,6 @@ class GAT(torch.nn.Module):
 		#x = F.dropout(x, p=0.6, training=self.training)
 		x = self.conv2(x, edge_index)
 		return x
-	#return x
-
-
-	# def forward(self, data):
-		# x, edge_index = data.x, data.edge_index
-		
-		# x = self.conv1(x, edge_index)
-		# x = F.elu(x)
-		# x = self.conv2(x, edge_index)
-		
 
 seed = 42
 
@@ -70,7 +60,7 @@ for i, row in df_sample.iterrows():
 	G.add_node(row['id'], label=row['label'])
 
 # Add edges
-threshold = 0.75
+threshold = 0.5
 
 for i in range(len(df_sample)):
 	for j in range(i+1, len(df_sample)):
@@ -121,7 +111,7 @@ model = GAT(
 	heads=8
 )
 
-optimizer = torch.optim.Adam(model. parameters(), lr=0.005)
+optimizer = torch.optim.Adam(model. parameters(), lr=0.01)
 criterion = torch.nn.CrossEntropyLoss()
 
 for epoch in range(200):

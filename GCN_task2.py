@@ -1,3 +1,4 @@
+# Task2 : edge creation using embending using sentiments similarity 
 import torch
 import pandas as pd
 import numpy as np
@@ -38,12 +39,10 @@ seed = 42
 # Load JSON
 df = pd.read_json(json_file)
 #df_sample = df.sample(2000, random_state=42)
-# df_sample = df.sample(2000, random_state = seed).reset_index(drop=True)
-df_sample = df.reset_index(drop=True)
+df_sample = df.sample(2000, random_state = seed).reset_index(drop=True)
+#df_sample = df.reset_index(drop=True)
 
 torch.manual_seed(seed)
-
-#print (df.head())
 
 # Load pretrained embedding model
 model = SentenceTransformer('all-MiniLM-L6-v2')
@@ -85,7 +84,7 @@ x = torch.tensor(embeddings, dtype=torch.float)
 # Encode labels
 le = LabelEncoder()
 #labels = le.fit_transform(df_sample['label'])
-labels = le.fit_transform(df_sample['label'])
+labels = le.fit_transform(df_sample['sentiment'])
 
 # Converts encoded labels to tensor.
 y = torch.tensor(labels, dtype=torch.long)

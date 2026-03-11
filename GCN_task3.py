@@ -1,3 +1,5 @@
+# Task2 : edge creation using semantic score and similarity score calculated by between two nodes tweets's embending 
+import sys
 import torch
 import pandas as pd
 import numpy as np
@@ -14,7 +16,7 @@ from sklearn.preprocessing import LabelEncoder
 
 import torch.nn.functional as F
 from torch_geometric.nn import GCNConv
-
+from sklearn.metrics import precision_recall_fscore_support
 
 json_file = "D:/A/Work/experiments/data/hate_dataset1_sentiment.json"
 
@@ -38,12 +40,10 @@ seed = 42
 # Load JSON
 df = pd.read_json(json_file)
 #df_sample = df.sample(2000, random_state=42)
-# df_sample = df.sample(2000, random_state = seed).reset_index(drop=True)
-df_sample = df.reset_index(drop=True)
+df_sample = df.sample(2000, random_state = seed).reset_index(drop=True)
+#df_sample = df.reset_index(drop=True)
 
 torch.manual_seed(seed)
-
-#print (df.head())
 
 # Load pretrained embedding model
 model = SentenceTransformer('all-MiniLM-L6-v2')
@@ -63,14 +63,20 @@ G = nx.Graph()
 for i, row in df_sample.iterrows():
 	#G.add_node(row['id'], label=row['label'])
 	# dataset1 instead of id it is X1
-	G.add_node(row['X1'], label=row['sentiment'])
+	G.add_node(row['X1'], label=row['label'])
 # Add edges
 threshold = 0.5
 
+text = df_sample["text"]
+sentiment = df_sample["sentiment"]
+sentiment_score = df_sample["sentiment_score"]
+
+
 for i in range(len(df_sample)):
 	for j in range(i+1, len(df_sample)):
-		if sim_matrix[i][j] > threshold:
-			G.add_edge(i, j)
+		if sentiment_score[i] >=0.6 and sentiment_score[j] >=0.6 and sentiment[i] == sentiment[j]:
+			if sim_matrix[i][j] > threshold:
+				G.add_edge(i, j)
 
 edge_list = list(G.edges())
 # converts it into a PyTorch tensor of integers. and .t() transposes it. .contiguous() → ensures memory layout is continuous (required after transpose).
@@ -84,7 +90,6 @@ x = torch.tensor(embeddings, dtype=torch.float)
 
 # Encode labels
 le = LabelEncoder()
-#labels = le.fit_transform(df_sample['label'])
 labels = le.fit_transform(df_sample['label'])
 
 # Converts encoded labels to tensor.
@@ -144,6 +149,9 @@ pred = out.argmax(dim=1)
 y_true = data.y[data.test_mask]
 y_pred = pred[data.test_mask]
 
+(precision, recall, f1_score, support) = precision_recall_fscore_support(y_true, y_pred, average=None, labels = [0, 1])
+
+"""
 # Confusion matrix components (binary classification)
 TP = ((y_pred == 1) & (y_true == 1)).sum().item()
 TN = ((y_pred == 0) & (y_true == 0)).sum().item()
@@ -164,9 +172,10 @@ f1_score = (2 * precision * recall) / (precision + recall) if (precision + recal
 
 # Specificity
 specificity = TN / (TN + FP) if (TN + FP) > 0 else 0
+"""
 
-print("Accuracy:", accuracy)
+#print("Accuracy:", accuracy)
 print("Precision:", precision)
 print("Recall:", recall)
 print("F1 Score:", f1_score)
-print("Specificity:", specificity)
+#print("Specificity:", specificity)
